@@ -1,0 +1,19 @@
+Threat Intelligence Report
+==============================
+
+Total IPs: 2
+Total Domains: 2
+Total URLs: 1
+Total Hashes: 1
+
+High Severity IOCs:
+
+Medium Severity IOCs:
+
+Low Severity IOCs:
+ - 192.168.1.1
+ - 8.8.8.8
+ - malicious.com
+ - bad-site.com
+ - http://bad-site.com/login
+ - d41d8cd98f00b204e9800998ecf8427e
