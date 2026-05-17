@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from modules.database import init_db, save_iocs, load_iocs
+from modules.database import init_db, save_iocs, load_iocs, clear_iocs
+
 
 init_db()
 from modules.parser import parse_iocs
@@ -343,6 +344,13 @@ else:
 
 st.markdown("---")
 st.subheader("Stored Threat Intelligence")
+if st.button("Clear Stored Threat Data"):
+    
+    clear_iocs()
+
+    st.success("Stored threat intelligence cleared successfully.")
+
+    st.rerun()
 
 stored_data = load_iocs()
 
@@ -364,3 +372,7 @@ Severity: {row[5]}
 
 else:
     st.info("No IOC history stored yet.")
+
+
+    
+    
