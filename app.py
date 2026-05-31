@@ -148,9 +148,7 @@ if st.session_state.data_lines:
         # Parse
         iocs = parse_iocs(temp_file)
 
-        total_parsed = sum(
-            len(v) for v in iocs.values()
-        )
+        total_parsed = sum(len(v) for v in iocs.values())
 
         log_info(
             f"Parsed {total_parsed} indicators"
@@ -160,13 +158,10 @@ if st.session_state.data_lines:
         validated_iocs, invalid_count = validate_iocs(iocs)
 
         if invalid_count > 0:
-
             log_warning(
                 f"Removed {invalid_count} invalid indicators"
             )
-
         else:
-
             log_info(
                 "Validation completed successfully"
             )
@@ -184,8 +179,11 @@ if st.session_state.data_lines:
         # Save
         save_iocs(correlated)
 
-        # ---------------- SUMMARY ----------------
+        log_info(
+            f"Stored {len(correlated)} indicators in database"
+        )
 
+        # Summary
         total = len(correlated)
 
         high = sum(
@@ -203,8 +201,7 @@ if st.session_state.data_lines:
             if x["severity"] == "LOW"
         )
 
-        # ---------------- METRICS ----------------
-
+        # Metrics
         st.markdown("## Threat Overview")
 
         st.info(
@@ -220,8 +217,7 @@ if st.session_state.data_lines:
 
         st.divider()
 
-        # ---------------- ANALYTICS ----------------
-
+        # Analytics
         st.markdown("## Threat Analytics")
 
         chart_col1, chart_col2 = st.columns(2)
@@ -276,8 +272,7 @@ if st.session_state.data_lines:
 
         st.divider()
 
-        # ---------------- IOC BREAKDOWN ----------------
-
+        # IOC Breakdown
         st.markdown("## IOC Breakdown")
 
         break1, break2 = st.columns(2)
@@ -290,8 +285,7 @@ if st.session_state.data_lines:
 
         st.divider()
 
-        # ---------------- TOP IOC TABLE ----------------
-
+        # Top IOC Table
         st.markdown("## Top Threat Indicators")
 
         ioc_df = pd.DataFrame(correlated)
@@ -310,8 +304,7 @@ if st.session_state.data_lines:
 
         st.divider()
 
-        # ---------------- PARSED IOCS ----------------
-
+        # Parsed IOCs
         st.markdown("## Parsed IOCs")
 
         for key, values in iocs.items():
@@ -323,21 +316,21 @@ if st.session_state.data_lines:
 
         st.divider()
 
-        # ---------------- NORMALIZED ----------------
-
+        # Normalized Intelligence
         st.markdown("## Normalized Intelligence")
 
         for category, items in normalized.items():
 
-            with st.expander(f"{category.upper()} Intelligence"):
+            with st.expander(
+                f"{category.upper()} Intelligence"
+            ):
 
                 for item in items:
                     st.json(item)
 
         st.divider()
 
-        # ---------------- CORRELATION ----------------
-
+        # Correlation Results
         st.markdown("## Correlation Results")
 
         corr_df = pd.DataFrame(correlated)
@@ -347,6 +340,7 @@ if st.session_state.data_lines:
         )
 
         if search_term:
+
             corr_df = corr_df[
                 corr_df["ioc"].str.contains(
                     search_term,
@@ -361,6 +355,7 @@ if st.session_state.data_lines:
         )
 
         if severity_filter != "ALL":
+
             corr_df = corr_df[
                 corr_df["severity"] == severity_filter
             ]
@@ -373,22 +368,18 @@ if st.session_state.data_lines:
 
         st.divider()
 
-        # ---------------- FOOTER ----------------
-
+        # Footer
         st.markdown("""
         <div style='text-align:center; padding:20px; color:gray;'>
         Threat Intelligence Aggregator | Cybersecurity Analytics Dashboard
         </div>
         """, unsafe_allow_html=True)
 
-# ---------------- EMPTY STATE ----------------
-
 else:
 
     st.info(
         "Upload a threat feed or fetch live threat data from URL."
     )
-
 # ---------------- DATABASE HISTORY ----------------
 
 st.markdown("---")
