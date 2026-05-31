@@ -335,36 +335,18 @@ if st.session_state.data_lines:
 
         corr_df = pd.DataFrame(correlated)
 
-        search_term = st.text_input(
-            "Search IOC"
-        )
+        if not corr_df.empty:
 
-        if search_term:
-
-            corr_df = corr_df[
-                corr_df["ioc"].str.contains(
-                    search_term,
-                    case=False,
-                    na=False
-                )
+            columns_to_show = [
+                col for col in ["ioc", "count", "severity"]
+                if col in corr_df.columns
             ]
 
-        severity_filter = st.selectbox(
-            "Filter Severity",
-            ["ALL", "HIGH", "MEDIUM", "LOW"]
-        )
-
-        if severity_filter != "ALL":
-
-            corr_df = corr_df[
-                corr_df["severity"] == severity_filter
-            ]
-
-        st.dataframe(
-            corr_df,
-            use_container_width=True,
-            height=450
-        )
+            st.dataframe(
+                corr_df[columns_to_show],
+                use_container_width=True,
+                height=450
+            )
 
         st.divider()
 
@@ -373,7 +355,7 @@ if st.session_state.data_lines:
         <div style='text-align:center; padding:20px; color:gray;'>
         Threat Intelligence Aggregator | Cybersecurity Analytics Dashboard
         </div>
-        """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)     
 
 else:
 
