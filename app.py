@@ -1,15 +1,16 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 from modules.database import init_db, save_iocs, load_iocs, clear_iocs
-
-
-init_db()
 from modules.parser import parse_iocs
 from modules.normalizer import normalize_iocs
+from modules.validator import validate_iocs
 from modules.correlator import correlate_iocs
 from modules.fetcher import fetch_feed
+
+# ---------------- DATABASE INIT ----------------
+
+init_db()
 
 # ---------------- PAGE CONFIG ----------------
 
@@ -91,7 +92,6 @@ if mode == "Upload File":
     if uploaded_file:
 
         content = uploaded_file.read().decode("utf-8")
-
         st.session_state.data_lines = content.splitlines()
 
 # ---------------- URL MODE ----------------
@@ -100,10 +100,10 @@ elif mode == "Fetch from URL":
 
     feed_options = {
         "Emerging Threats IP Feed":
-        "https://rules.emergingthreats.net/blockrules/compromised-ips.txt",
+            "https://rules.emergingthreats.net/blockrules/compromised-ips.txt",
 
         "OpenPhish Feed":
-        "https://openphish.com/feed.txt"
+            "https://openphish.com/feed.txt"
     }
 
     selected_feed = st.sidebar.selectbox(
@@ -116,7 +116,6 @@ elif mode == "Fetch from URL":
         url = feed_options[selected_feed]
 
         with st.spinner("Fetching live threat intelligence..."):
-
             st.session_state.data_lines = fetch_feed(url)
 
         st.sidebar.success("Threat feed fetched successfully")
@@ -130,21 +129,22 @@ if st.session_state.data_lines:
         temp_file = "temp_feed.txt"
 
         with open(temp_file, "w") as f:
-
             for line in st.session_state.data_lines:
                 f.write(line + "\n")
 
-        # ---------------- PARSE ----------------
-
+        # Parse
         iocs = parse_iocs(temp_file)
 
-        # ---------------- NORMALIZE ----------------
+        # Validate
+        validated_iocs, invalid_count = validate_iocs(iocs)
 
-        normalized = normalize_iocs(iocs)
+        # Normalize
+        normalized = normalize_iocs(validated_iocs)
 
-        # ---------------- CORRELATION ----------------
-
+        # Correlate
         correlated = correlate_iocs(normalized)
+
+        # Save
         save_iocs(correlated)
 
         # ---------------- SUMMARY ----------------
@@ -152,20 +152,27 @@ if st.session_state.data_lines:
         total = len(correlated)
 
         high = sum(
-            1 for x in correlated if x["severity"] == "HIGH"
+            1 for x in correlated
+            if x["severity"] == "HIGH"
         )
 
         medium = sum(
-            1 for x in correlated if x["severity"] == "MEDIUM"
+            1 for x in correlated
+            if x["severity"] == "MEDIUM"
         )
 
         low = sum(
-            1 for x in correlated if x["severity"] == "LOW"
+            1 for x in correlated
+            if x["severity"] == "LOW"
         )
 
         # ---------------- METRICS ----------------
 
         st.markdown("## Threat Overview")
+
+        st.info(
+            f"Validation Engine Removed {invalid_count} malformed indicators."
+        )
 
         col1, col2, col3, col4 = st.columns(4)
 
@@ -181,8 +188,6 @@ if st.session_state.data_lines:
         st.markdown("## Threat Analytics")
 
         chart_col1, chart_col2 = st.columns(2)
-
-        # ---------------- PIE CHART ----------------
 
         severity_df = pd.DataFrame({
             "Severity": ["HIGH", "MEDIUM", "LOW"],
@@ -208,11 +213,9 @@ if st.session_state.data_lines:
             use_container_width=True
         )
 
-        # ---------------- BAR CHART ----------------
-
         category_df = pd.DataFrame({
-            "Category": list(iocs.keys()),
-            "Count": [len(v) for v in iocs.values()]
+            "Category": list(validated_iocs.keys()),
+            "Count": [len(v) for v in validated_iocs.values()]
         })
 
         fig2 = px.bar(
@@ -328,9 +331,7 @@ if st.session_state.data_lines:
 
         st.markdown("""
         <div style='text-align:center; padding:20px; color:gray;'>
-
         Threat Intelligence Aggregator | Cybersecurity Analytics Dashboard
-
         </div>
         """, unsafe_allow_html=True)
 
@@ -338,17 +339,22 @@ if st.session_state.data_lines:
 
 else:
 
-    st.info("Upload a threat feed or fetch live threat data from URL.")
+    st.info(
+        "Upload a threat feed or fetch live threat data from URL."
+    )
 
 # ---------------- DATABASE HISTORY ----------------
 
 st.markdown("---")
 st.subheader("Stored Threat Intelligence")
+
 if st.button("Clear Stored Threat Data"):
-    
+
     clear_iocs()
 
-    st.success("Stored threat intelligence cleared successfully.")
+    st.success(
+        "Stored threat intelligence cleared successfully."
+    )
 
     st.rerun()
 
@@ -356,7 +362,9 @@ stored_data = load_iocs()
 
 if stored_data:
 
-    st.write(f"Total Stored Records: {len(stored_data)}")
+    st.write(
+        f"Total Stored Records: {len(stored_data)}"
+    )
 
     for row in stored_data[:20]:
 
@@ -371,8 +379,7 @@ Severity: {row[5]}
         )
 
 else:
-    st.info("No IOC history stored yet.")
 
-
-    
-    
+    st.info(
+        "No IOC history stored yet."
+    )
