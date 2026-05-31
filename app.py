@@ -7,6 +7,11 @@ from modules.normalizer import normalize_iocs
 from modules.validator import validate_iocs
 from modules.correlator import correlate_iocs
 from modules.fetcher import fetch_feed
+from modules.logger import (
+    log_info,
+    log_warning,
+    log_error
+)
 
 # ---------------- DATABASE INIT ----------------
 
@@ -94,6 +99,10 @@ if mode == "Upload File":
         content = uploaded_file.read().decode("utf-8")
         st.session_state.data_lines = content.splitlines()
 
+        log_info(
+            f"Feed uploaded with {len(st.session_state.data_lines)} lines"
+        )
+
 # ---------------- URL MODE ----------------
 
 elif mode == "Fetch from URL":
@@ -118,6 +127,10 @@ elif mode == "Fetch from URL":
         with st.spinner("Fetching live threat intelligence..."):
             st.session_state.data_lines = fetch_feed(url)
 
+        log_info(
+            f"Feed fetched successfully: {selected_feed}"
+        )
+
         st.sidebar.success("Threat feed fetched successfully")
 
 # ---------------- PROCESS ----------------
@@ -135,14 +148,39 @@ if st.session_state.data_lines:
         # Parse
         iocs = parse_iocs(temp_file)
 
+        total_parsed = sum(
+            len(v) for v in iocs.values()
+        )
+
+        log_info(
+            f"Parsed {total_parsed} indicators"
+        )
+
         # Validate
         validated_iocs, invalid_count = validate_iocs(iocs)
+
+        if invalid_count > 0:
+
+            log_warning(
+                f"Removed {invalid_count} invalid indicators"
+            )
+
+        else:
+
+            log_info(
+                "Validation completed successfully"
+            )
+
 
         # Normalize
         normalized = normalize_iocs(validated_iocs)
 
         # Correlate
         correlated = correlate_iocs(normalized)
+
+        log_info(
+            f"Correlated {len(correlated)} indicators"
+        )
 
         # Save
         save_iocs(correlated)
@@ -351,6 +389,10 @@ st.subheader("Stored Threat Intelligence")
 if st.button("Clear Stored Threat Data"):
 
     clear_iocs()
+
+    log_warning(
+        "Threat intelligence database cleared"
+    )
 
     st.success(
         "Stored threat intelligence cleared successfully."
