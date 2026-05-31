@@ -171,7 +171,6 @@ if st.session_state.data_lines:
                 "Validation completed successfully"
             )
 
-
         # Normalize
         normalized = normalize_iocs(validated_iocs)
 
@@ -341,27 +340,36 @@ if st.session_state.data_lines:
 
         st.markdown("## Correlation Results")
 
-        for item in correlated:
+        corr_df = pd.DataFrame(correlated)
 
-            severity = item["severity"]
+        search_term = st.text_input(
+            "Search IOC"
+        )
 
-            if severity == "HIGH":
-
-                st.error(
-                    f"{item['ioc']} -> Count: {item['count']} | Severity: {severity}"
+        if search_term:
+            corr_df = corr_df[
+                corr_df["ioc"].str.contains(
+                    search_term,
+                    case=False,
+                    na=False
                 )
+            ]
 
-            elif severity == "MEDIUM":
+        severity_filter = st.selectbox(
+            "Filter Severity",
+            ["ALL", "HIGH", "MEDIUM", "LOW"]
+        )
 
-                st.warning(
-                    f"{item['ioc']} -> Count: {item['count']} | Severity: {severity}"
-                )
+        if severity_filter != "ALL":
+            corr_df = corr_df[
+                corr_df["severity"] == severity_filter
+            ]
 
-            else:
-
-                st.success(
-                    f"{item['ioc']} -> Count: {item['count']} | Severity: {severity}"
-                )
+        st.dataframe(
+            corr_df,
+            use_container_width=True,
+            height=450
+        )
 
         st.divider()
 
